@@ -1,0 +1,145 @@
+!CLAUDE, NÃO CONSIDERAR ESSE ARQUIVO, ELE ESTÁ SENDO FORMULADO AINDA.!
+
+====================================================================
+                        LIVEEDIT — EXPLICAÇÃO DO PROJETO
+====================================================================
+
+O que é?
+--------
+LiveEdit é um SaaS de edição de código com inteligência artificial. A
+ideia central é simples: o usuário descreve em linguagem natural o que
+quer mudar no site dele (ex.: "mude o botão de azul para verde" ou
+"adicione uma seção de depoimentos abaixo do hero"), o lado do cliente
+manda o código fonte do lado do cliente para a api, com a solicitação,
+e o sistema usa o Claude (IA da Anthropic) para gerar as alterações 
+no código-fonte do lado do cliente do usuário e manda de volta para
+o script do lado do cliente aplicar a alteração.
+
+====================================================================
+FLUXO GERAL DO SISTEMA
+====================================================================
+
+O backend é construído em NestJS (TypeScript) e expõe três formas
+diferentes de o usuário interagir com a IA:
+
+-------------------------------------------------------------
+2. FLUXO WEBSOCKET (Preview ao vivo)
+--------------------------------------------------------------------
+Ideal para edição visual interativa em tempo real.
+
+  a) Um snippet JavaScript é injetado no repositório do usuário.
+     Esse snippet adiciona seletores data-editid em cada elemento
+     da página e abre uma conexão WebSocket com o backend.
+  b) O usuário descreve a mudança desejada no sidebar do snippet.
+  c) O HTML anotado da página é enviado ao backend via WebSocket.
+  d) O Claude analisa o HTML e retorna operações DOM (ex.: troca
+     de texto, mudança de cor, remoção de elemento) que são
+     aplicadas IMEDIATAMENTE no navegador — sem reload.
+  e) Ao mesmo tempo, as alterações nos arquivos ficam "pendentes".
+
+--------------------------------------------------------------------
+3. FLUXO CHAT WIDGET
+--------------------------------------------------------------------
+Um widget de chat autossuficiente injetado direto no site do usuário.
+
+  a) O backend gera um arquivo JavaScript completo e autocontido
+     que cria uma janela de chat flutuante na página.
+  b) O usuário conversa com a IA diretamente pelo site.
+  c) As respostas chegam via Server-Sent Events (streaming).
+  d) O Claude retorna operações DOM.
+
+
+====================================================================
+ESTRUTURA DOS MÓDULOS
+====================================================================
+
+src/github/
+  - Toda a integração com a API do GitHub via Octokit.
+  - Lista arquivos do repositório, busca conteúdo, cria branches,
+    faz commits e abre Pull Requests.
+  - Bloqueia escrita em arquivos sensíveis (.env, secrets.json, etc.)
+    tanto por nome exato quanto por padrão regex.
+
+src/auth/
+  - Autenticação por JWT (tokens com validade de 7 dias).
+  - Registro e login com senha criptografada via bcrypt.
+  - OAuth com GitHub para autorizar acesso aos repositórios.
+
+src/users/
+  - Entidade do usuário no banco de dados.
+  - Armazena: hash da senha, token GitHub, chave Anthropic própria
+    (opcional) e URL do CLAUDE.md personalizado.
+
+src/projects/
+  - Projetos representam repositórios GitHub cadastrados.
+  - Cada projeto tem owner, repo, branch padrão e token GitHub
+    próprio (que sobrescreve o token do usuário).
+
+src/anthropic/
+  - Manager que consome as apis da anthropic quando necessário.
+
+src/chat/
+  - Serviço e controller do chat widget.
+  - Mantém histórico de conversa em memória por sessão.
+  - Streaming de respostas via SSE.
+
+src/ws/
+  - Gateway Socket.IO (WebSocket) para o fluxo de preview ao vivo.
+  - Valida JWT na conexão, gerencia sessões pendentes por socket.
+
+src/storage/
+  - Upload e gerenciamento de arquivos no Supabase Storage.
+  - Usado para armazenar arquivos CLAUDE.md personalizados dos usuários.
+
+src/common/
+  - Filtro global de erros HTTP (retorna JSON padronizado).
+  - Interceptor global de logging (loga todas as requisições com
+    status e tempo de resposta).
+
+====================================================================
+BANCO DE DADOS
+====================================================================
+
+PostgreSQL com TypeORM. As tabelas são criadas automaticamente pelo
+TypeORM (synchronize: true) — em produção isso deveria ser substituído
+por migrations.
+
+Entidades principais:
+  - UserEntity     → usuários cadastrados
+  - ProjectEntity  → repositórios GitHub cadastrados
+
+====================================================================
+INTELIGÊNCIA ARTIFICIAL
+====================================================================
+
+Instruções personalizadas:
+  Cada usuário pode fazer upload de um arquivo CLAUDE.md com suas
+  próprias regras (ex.: "sempre use Tailwind", "não altere o header").
+  Esse arquivo é armazenado num bucket e injetado no início do
+  system prompt de todas as chamadas ao Claude daquele usuário.
+
+====================================================================
+SEGURANÇA
+====================================================================
+
+  - Senhas criptografadas com bcrypt (12 rounds).
+  - JWT com expiração de 7 dias.
+  - Arquivos sensíveis bloqueados no GitHub: .env*, secrets.json/yaml.
+  - ValidationPipe global: rejeita campos não declarados nos DTOs.
+  - Limite de 50 MB no body (necessário para HTML grande dos snippets).
+
+====================================================================
+VARIÁVEIS DE AMBIENTE NECESSÁRIAS
+====================================================================
+
+  DATABASE_URL            → PostgreSQL
+  ANTHROPIC_API_KEY       → Chave da API do Claude
+  GITHUB_CLIENT_ID        → OAuth App do GitHub
+  GITHUB_CLIENT_SECRET    → OAuth App do GitHub
+  GITHUB_BOT_TOKEN        → Token do bot para operações no GitHub
+  JWT_SECRET              → Segredo para assinar os tokens JWT
+  FRONTEND_URL            → URL do frontend (para redirects OAuth)
+  BACKEND_URL             → URL do próprio backend
+  ALLOWED_ORIGINS         → Origens permitidas no CORS
+
+====================================================================

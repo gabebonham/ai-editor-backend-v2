@@ -1,0 +1,20 @@
+import { Module } from '@nestjs/common';
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './users/user.module';
+import { DatabaseModule } from './database/database.module';
+import { ConfigModule } from '@nestjs/config';
+import { GithubModule } from './github/github.module';
+import { CommonModule } from './common/common.module';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true }),
+    AuthModule, 
+    UserModule, 
+    DatabaseModule, 
+    GithubModule,
+    CommonModule
+  ],
+  providers: [],
+})
+export class AppModule {}

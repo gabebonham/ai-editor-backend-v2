@@ -1,0 +1,1 @@
+Caso o prompt seja "read-prompt", leia o arquivo que esta em ./claude-development/prompt.txt, leia e haja de acordo como se fosse o prompt
