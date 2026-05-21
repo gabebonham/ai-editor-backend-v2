@@ -36,4 +36,13 @@ export abstract class BaseRepository<T extends BaseEntity> {
         const entity = this.repository.create(data);
         return this.repository.save(entity);
     }
+    async delete(id: string): Promise<T> {
+        const entity = await this.findById(id);
+        await this.repository.delete(id);
+        return entity!;
+    }
+    async update(id: string, data: DeepPartial<T>): Promise<T> {
+        await this.repository.update(id, data as any);
+        return this.findById(id) as Promise<T>;
+    }
 }

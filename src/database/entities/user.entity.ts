@@ -9,12 +9,12 @@ export class UserEntity extends BaseEntity {
     email!: string;
     @Column()
     password!: string;
-    @Column({ nullable: true })
-    github_token?: string;
-    @Column({ nullable: true })
-    github_name?: string;
-    @Column({ nullable: true })
-    github_email?: string;
-    @Column({ nullable: true })
-    github_login?: string;
+    @Column({ nullable: true, name: 'github_token' })
+    githubToken?: string;
+    @Column({ nullable: true, name: 'github_name' })
+    githubName?: string;
+    @Column({ nullable: true, name: 'github_email' })
+    githubEmail?: string;
+    @Column({ nullable: true, name: 'github_login' })
+    githubLogin?: string;
 }

@@ -16,6 +16,10 @@ export class GithubService {
     await this.saveGithubData(userData, userId, access_token);
   }
 
+  async getScript(userId: string, projectId: string): Promise<void> {
+
+  }
+
   async fetchToken(code: string): Promise<string> {
     const tokenRes = await firstValueFrom(this.http.post(
       this.GITHUB_OAUTH + '/login/oauth/access_token',
@@ -36,6 +40,7 @@ export class GithubService {
 
     return access_token;
   }
+
   async fetchUserData(access_token: string): Promise<any> {
     const userRes = await firstValueFrom(this.http.get(
       this.GITHUB_API + '/user',
@@ -45,39 +50,42 @@ export class GithubService {
     ));
     return userRes.data;
   }
+
   async saveGithubData(userData: any, userId: string, access_token: string): Promise<void> {
     if (!userData || !access_token || !userData.login) {
       throw new BadRequestException('Invalid user data received from GitHub.');
     }
     await this.userService.update(userId, {
-      github_token: access_token,
-      github_name: userData.name,
-      github_email: userData.email,
-      github_login: userData.login,
+      githubToken: access_token,
+      githubName: userData.name,
+      githubEmail: userData.email,
+      githubLogin: userData.login,
     });
   }
+
   async getGithubRepos(userId: string): Promise<any[]> {
     const user = await this.userService.getById(userId);
-    if (!user.github_token) {
+    if (!user.githubToken) {
       throw new BadRequestException('User has not linked their GitHub account.');
     }
     const reposRes = await firstValueFrom(this.http.get(
       this.GITHUB_API + '/user/repos',
       {
-        headers: { Authorization: `token ${user.github_token}` },
+        headers: { Authorization: `token ${user.githubToken}` },
       },
     ));
     return reposRes.data;
   }
+
   async getGithubRepo(userId: string, repo: string): Promise<any> {
     const user = await this.userService.getById(userId);
-    if (!user.github_token) {
+    if (!user.githubToken) {
       throw new BadRequestException('User has not linked their GitHub account.');
     }
     const repoRes = await firstValueFrom(this.http.get(
-      this.GITHUB_API + `/repos/${user.github_login}/${repo}`,
+      this.GITHUB_API + `/repos/${user.githubLogin}/${repo}`,
       {
-        headers: { Authorization: `token ${user.github_token}` },
+        headers: { Authorization: `token ${user.githubToken}` },
       },
     ));
     return repoRes.data;
