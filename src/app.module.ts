@@ -6,6 +6,7 @@ import { ConfigModule } from '@nestjs/config';
 import { GithubModule } from './github/github.module';
 import { CommonModule } from './common/common.module';
 import { ProjectModule } from './projects/project.module';
+import { ClaudeModule } from './claude/claude.module';
 
 @Module({
   imports: [
@@ -15,7 +16,8 @@ import { ProjectModule } from './projects/project.module';
     DatabaseModule, 
     GithubModule,
     CommonModule,
-    ProjectModule
+    ProjectModule,
+    ClaudeModule
   ],
   providers: [],
 })
