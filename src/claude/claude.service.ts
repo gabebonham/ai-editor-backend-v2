@@ -1,7 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import Anthropic from '@anthropic-ai/sdk';
 import { Response } from 'express';
+const SYSTEM_PROMPT = `Você é um assistente que gera e edita HTML.
 
+Regras:
+- Retorne APENAS HTML puro, sem markdown, sem backticks, sem explicações
+- Use APENAS CSS inline (style="...") ou tag <style> no <head> para estilização
+- NUNCA use CDN externo, frameworks ou bibliotecas externas
+- O HTML deve ser completo: <!DOCTYPE html>, <head>, <body>
+- Escreva CSS moderno e bonito diretamente no <style>
+- Nunca retorne texto fora do HTML`;
 @Injectable()
 export class ClaudeService {
   private client: Anthropic;
@@ -25,7 +33,8 @@ export class ClaudeService {
     try {
       const stream = this.client.messages.stream({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1024,
+        max_tokens: 4096,
+        system: SYSTEM_PROMPT,
         messages: [{ role: 'user', content: question }],
       });
 
