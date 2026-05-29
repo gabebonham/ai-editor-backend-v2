@@ -7,6 +7,7 @@ import { GithubModule } from './github/github.module';
 import { CommonModule } from './common/common.module';
 import { ProjectModule } from './projects/project.module';
 import { ClaudeModule } from './claude/claude.module';
+import { StorageModule } from './storage/storage.module';
 
 @Module({
   imports: [
@@ -17,7 +18,8 @@ import { ClaudeModule } from './claude/claude.module';
     GithubModule,
     CommonModule,
     ProjectModule,
-    ClaudeModule
+    ClaudeModule,
+    StorageModule
   ],
   providers: [],
 })

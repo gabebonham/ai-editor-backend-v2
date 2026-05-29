@@ -5,10 +5,14 @@ import { ProjectRepository } from 'src/database/repositories/project.repository'
 import { CreateProjectRequest } from './create-project.request';
 import { ProjectEntity } from 'src/database/entities/project.entity';
 import { UpdateProjectRequest } from './update-project.request';
+import { StorageService } from 'src/storage/storage.service';
 
 @Injectable()
 export class ProjectService {
-  constructor(private readonly projectRepository: ProjectRepository) {}
+  constructor(
+    private readonly storageService: StorageService,
+    private readonly projectRepository: ProjectRepository
+  ) { }
   async getPaginatedByUserId(dto: PaginationQuery, userId: string): Promise<PaginatedResponse> {
     return await this.projectRepository.findAllByUserIdPaginated(userId, dto.page, dto.limit);
   }
@@ -45,5 +49,34 @@ export class ProjectService {
       throw new NotFoundException('Project not found.');
     }
     return await this.projectRepository.delete(id);
+  }
+  async uploadMdFile(id: string, file: Express.Multer.File): Promise<ProjectEntity> {
+    const project = await this.projectRepository.findById(id);
+    if (!project) throw new NotFoundException('Project not found.');
+
+    if (project.mdFileUrl) {
+      const key = new URL(project.mdFileUrl).pathname.slice(1);
+      const [bucket, ...rest] = key.split('/');
+      await this.storageService.delete(bucket, rest.join('/'));
+    }
+    const safeName = file.originalname
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // remove acentos
+      .replace(/[^a-zA-Z0-9.\-_]/g, '_'); // substitui especiais
+    const key = `${id}/${Date.now()}-${safeName}`;
+    const url = await this.storageService.upload('projects', key, file.buffer, file.mimetype);
+
+    return await this.projectRepository.update(id, { ...project, mdFileUrl: url });
+  }
+  async getMdFile(id: string) {
+    const project = await this.projectRepository.findById(id);
+    if (!project) throw new NotFoundException('Project not found.');
+    if (!project.mdFileUrl) throw new NotFoundException('No file uploaded.');
+
+    const key = new URL(project.mdFileUrl).pathname.slice(1);
+    const [bucket, ...rest] = key.split('/');
+
+    const stream = await this.storageService.get(bucket, rest.join('/'));
+    return { stream, filename: rest.at(-1) };
   }
 }

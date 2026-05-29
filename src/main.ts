@@ -3,10 +3,10 @@ import { AppModule } from './app.module';
 import process from 'process';
 import { ValidationPipe } from '@nestjs/common';
 import { ResponseInterceptor } from './common/response.interceptor';
+import cookieParser from 'cookie-parser';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  app.enableCors();
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -15,6 +15,11 @@ async function bootstrap() {
     }),
   );
 
+  app.use(cookieParser());
+  app.enableCors({
+    origin: process.env.FRONTEND_URL,
+    credentials: true,
+  });
   app.useGlobalInterceptors(
     new ResponseInterceptor(),
   );

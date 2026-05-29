@@ -35,10 +35,10 @@ export class AuthService {
   }
 
   private async generateToken(user: UserEntity): Promise<LoginResponse> {
-    const token = this.jwtService.sign({sub: user.id, email: user.email}, { expiresIn: '1d' });
+    const token = this.jwtService.sign({sub: user.id, email: user.email,username: user.username}, { expiresIn: '1d' });
     return {
       access_token: token,
-      expires_in: 60 * 60 * 24,
+      expires_in: 60 * 60 * 24 * 1000,
       user: {
         id: user.id,
         username: user.username,

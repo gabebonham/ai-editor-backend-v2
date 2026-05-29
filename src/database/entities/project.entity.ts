@@ -9,6 +9,9 @@ export class ProjectEntity extends BaseEntity {
     name!: string;
 
     @Column({ nullable: true })
+    html?: string;
+
+    @Column({ nullable: true })
     description?: string;
     
     @Column({ name: 'user_id' })
@@ -18,7 +21,9 @@ export class ProjectEntity extends BaseEntity {
     @JoinColumn({ name: 'user_id' })
     user!: UserEntity;
 
-    @Column({ name: 'github_repo_url' })
-    githubRepoUrl!: string;
+    @Column({ name: 'github_repo_url', nullable:true })
+    githubRepoUrl?: string;
 
+    @Column({ name: 'md_file_url',nullable: true })
+    mdFileUrl?: string;
 }

@@ -4,5 +4,7 @@ export interface ProjectResponse {
     name: string;
     description?: string;
     githubRepoUrl?: string;
+    html?: string;
+    mdFileUrl?: string;
     createdAt: Date;
 }

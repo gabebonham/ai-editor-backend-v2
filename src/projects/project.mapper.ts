@@ -20,6 +20,8 @@ export class ProjectMapper {
             description: entity.description,
             githubRepoUrl: entity.githubRepoUrl,
             createdAt: entity.createdAt,
+            html:entity.html,
+            mdFileUrl:entity.mdFileUrl
         };
     }
 }

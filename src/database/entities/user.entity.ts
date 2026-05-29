@@ -17,4 +17,6 @@ export class UserEntity extends BaseEntity {
     githubEmail?: string;
     @Column({ nullable: true, name: 'github_login' })
     githubLogin?: string;
+    @Column({ nullable: true, name: 'anthropic_key' })
+    anthropicKey?: string;
 }
